@@ -1,6 +1,6 @@
 import streamlit as st
-from sheets import read_sheet, update_pilot_status, assign_pilot_to_mission
-from scheduler import match_pilots_for_mission
+from sheets import read_sheet, update_pilot_status, assign_pilot_to_mission, assign_drone_to_mission
+from scheduler import match_pilots_for_mission, match_drones_for_mission
 
 st.title("Drone Operations Coordinator")
 
@@ -67,3 +67,30 @@ new_status = st.selectbox(
 if st.button("Update Status", key="update_status_btn"):
     update_pilot_status(pilot_name, new_status)
     st.success("Status updated in Google Sheets!")
+
+# =====================================================
+# 3️⃣ DRONE INVENTORY
+# =====================================================
+st.header("Drone Assignment")
+
+drones = read_sheet("drone_fleet")
+
+st.dataframe(drones)
+
+if st.button("Find Available Drones", key="find_drones_btn"):
+    mission = missions[missions["project_id"] == mission_id].iloc[0]
+    st.session_state.drone_matches = match_drones_for_mission(mission)
+
+if "drone_matches" not in st.session_state:
+    st.session_state.drone_matches = []
+
+if st.session_state.drone_matches:
+    selected_drone = st.selectbox(
+        "Select Drone",
+        st.session_state.drone_matches,
+        key="drone_select"
+    )
+
+    if st.button("Assign Drone", key="assign_drone_btn"):
+        assign_drone_to_mission(selected_drone, mission_id)
+        st.success(f"{selected_drone} assigned to {mission_id}")

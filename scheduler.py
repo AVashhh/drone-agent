@@ -1,5 +1,5 @@
 from sheets import read_sheet
-
+import pandas as pd
 
 def get_available_pilots():
     pilots = read_sheet("pilot_roster")
@@ -27,3 +27,17 @@ def match_pilots_for_mission(mission_row):
             matches.append(p["name"])
 
     return matches
+
+def match_drones_for_mission(mission):
+    drones = read_sheet("drone_fleet")
+
+    required_skill = mission["required_skills"]
+    location = mission["location"]
+
+    available = drones[
+        (drones["status"] == "Available") &
+        (drones["location"] == location) &
+        (drones["capabilities"].str.contains(required_skill, case=False))
+    ]
+
+    return available["drone_id"].tolist()
