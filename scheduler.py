@@ -41,3 +41,41 @@ def match_drones_for_mission(mission):
     ]
 
     return available["drone_id"].tolist()
+
+def match_drones_for_mission(mission):
+    drones = read_sheet("drone_fleet")
+
+    required_caps = [
+        c.strip().lower()
+        for c in mission["required_skills"].split(",")
+    ]
+
+    mission_location = mission["location"].strip().lower()
+
+    available = []
+
+    for _, drone in drones.iterrows():
+        # 1️⃣ Status check
+        if drone["status"] != "Available":
+            continue
+
+        # 2️⃣ Capability check
+        drone_caps = [
+            c.strip().lower()
+            for c in drone["capabilities"].split(",")
+        ]
+        if not all(cap in drone_caps for cap in required_caps):
+            continue
+
+        # 3️⃣ Location check
+        if drone["location"].strip().lower() != mission_location:
+            continue
+
+        # 4️⃣ Maintenance date check
+        if drone.get("maintenance_due"):
+            if pd.to_datetime(drone["maintenance_due"]) <= pd.Timestamp.today():
+                continue
+
+        available.append(drone["drone_id"])
+
+    return available

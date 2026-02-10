@@ -9,11 +9,15 @@ from sheets import (
     update_drone_status,
     flag_maintenance_issues,
     check_pilot_double_booking,
+    check_drone_double_booking,  
     check_skill_cert_mismatch,
     check_location_mismatch
 )
 
-from scheduler import match_pilots_for_mission, match_drones_for_mission
+from scheduler import (
+    match_pilots_for_mission,
+    match_drones_for_mission
+)
 
 st.title("Drone Operations Coordinator")
 
@@ -86,12 +90,17 @@ if not maintenance.empty:
 st.header("Conflict Detection")
 
 pilot_conflicts = check_pilot_double_booking(pilots, missions)
+drone_conflicts = check_drone_double_booking(drones, missions)  # ✅ ADDED
 skill_issues = check_skill_cert_mismatch(pilots, missions)
 location_issues = check_location_mismatch(pilots, missions, drones)
 
 if pilot_conflicts:
     st.warning("Pilot double booking")
     st.dataframe(pd.DataFrame(pilot_conflicts))
+
+if drone_conflicts:
+    st.warning("Drone double booking")
+    st.dataframe(pd.DataFrame(drone_conflicts))
 
 if skill_issues:
     st.warning("Skill mismatches")
@@ -101,5 +110,5 @@ if location_issues:
     st.warning("Location mismatches")
     st.dataframe(pd.DataFrame(location_issues))
 
-if not (pilot_conflicts or skill_issues or location_issues):
+if not (pilot_conflicts or drone_conflicts or skill_issues or location_issues):
     st.success("No conflicts detected")
